@@ -1,0 +1,19 @@
+modules:
+  jira:issueActivity:
+    - key: activity2-hello-world-issue-activity
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: Activity2
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  id: ari:cloud:ecosystem::app/94f1dd21-c9e6-45ba-8a9c-24253f93b47a
+permissions:
+  scopes:
+    - read:jira-work
