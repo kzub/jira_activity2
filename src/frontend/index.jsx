@@ -91,7 +91,7 @@ const convertChangelog = (data) => {
     });
   }
 
-  return activity.flat();
+  return activity.flat().filter(a => a.field != 'description' || config.comments.ingnoredAccounts.indexOf(a.authorId) == -1);;
 };
 
  // ----------------------------------------------------------------------------------------------------------
