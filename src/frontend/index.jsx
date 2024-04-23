@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Text, Inline, User, Stack, xcss, Heading, Badge , Strong} from '@forge/react';
+import ForgeReconciler, { Text, Inline, User, Stack, xcss, Heading, Badge , Strong, Lozenge} from '@forge/react';
 import { invoke } from '@forge/bridge';
 import { requestJira } from '@forge/bridge';
 
-const JenkinsAccId = '557058:a348e55f-b824-41eb-90e4-5576b1a85e20';
+import config from '../../config/default.json'
 
 // ----------------------------------------------------------------------------------------------------------
 const convertComments = (data) => {
@@ -47,20 +47,22 @@ const convertComments = (data) => {
     });
   }
 
-  return activity.filter(a => a.authorId != JenkinsAccId);
+  return activity.filter(a => config.comments.ingnoredAccounts.indexOf(a.authorId) == -1);
 };
 
 // ----------------------------------------------------------------------------------------------------------
 const convertChangelog = (data) => {
-  const fieldsToTrack = ['assignee', 'status', 'Test Engineer', 'Reviewer'];
+  const fieldsToTrack = ['assignee', 'status', 'Test Engineer', 'Reviewer', 'description'];
   const activity = data.values.map(v => {
     const base = {
       type: 'change',
       authorId: v.author.accountId,
       created: v.created,
-      field: '',
-      fromValue: '',
-      toValue: '',
+      field: null,
+      from: null,
+      fromValue: null,
+      to: null,
+      toValue: null,
     };
 
     const res = [];
@@ -69,8 +71,10 @@ const convertChangelog = (data) => {
         res.push({
           ...base,
           field: item.field,
-          fromValue: item.fromString || '',
-          toValue: item.toString || '',
+          from: item.from,
+          fromValue: item.fromString,
+          to: item.to,
+          toValue: item.toString,
         });
         continue;
       }
@@ -147,12 +151,29 @@ const App = () => {
                 </Inline>
               }
               {
-                (a.type == 'change') &&
+                (a.type == 'change' && a.field == 'status') &&
                   <Inline alignBlock="center" space="space.050">
-                      <Text>Change field <Strong>{a.field}</Strong>:</Text>
-                      <Badge>{a.fromValue}</Badge>
+                      <Text>Change <Strong>{a.field}</Strong>:</Text>
+                      <Lozenge isBold="true">{a.fromValue}</Lozenge>
                       →
-                      <Badge>{a.toValue}</Badge>
+                      <Lozenge isBold="true">{a.toValue}</Lozenge>
+                  </Inline>
+              }
+              {
+                (a.type == 'change' && ['Test Engineer', 'Reviewer', 'assignee'].indexOf(a.field) != -1) &&
+                  <Inline alignBlock="center" space="space.050">
+                      <Text>Change <Strong>{a.field}</Strong>:</Text>
+                      <User accountId={a.from} />
+                      →
+                      <User accountId={a.to} />
+                  </Inline>
+              }
+
+              {
+                (a.type == 'change' && ['description'].indexOf(a.field) != -1) &&
+                  <Inline alignBlock="center" space="space.050">
+                      <Text>Change <Strong>{a.field}</Strong>:</Text>
+                      <Text>{a.toValue}</Text>
                   </Inline>
               }
             </Stack>
